@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:myappimc/apppackage/Imc_calcule.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class myApp extends StatefulWidget {
   @override
@@ -29,6 +30,25 @@ class _MyScreenState extends State<MyScreen> {
   var calcular = calcularIMC();
   String resultado = '';
   String classificacao = '';
+  @override
+
+//init state carrega os dados do load saved values
+  void initState() {
+    super.initState();
+    _loadSavedValues();
+  }
+
+//carregar dados salvos
+  _loadSavedValues() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    double savedPeso = prefs.getDouble('peso') ?? 0.0;
+    double savedAltura = prefs.getDouble('altura') ?? 0.0;
+
+    setState(() {
+      _pesoController.text = savedPeso.toString();
+      _alturaController.text = savedAltura.toString();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -61,27 +81,47 @@ class _MyScreenState extends State<MyScreen> {
                     Expanded(child: Container()),
                   ],
                 ),
-                Container(
-                  //the container responsible for user weight-related settings.
-                  width: double.infinity,
-                  margin: const EdgeInsets.symmetric(horizontal: 30),
-                  height: 50,
-                  alignment: Alignment.center,
+                const Column(children: [
+                  Text(
+                    "Digite seu peso:",
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  )
+                ]),
+                Center(
+                  child: Container(
+                    //the container responsible for user weight-related settings.
+                    width: double.infinity,
+                    margin: const EdgeInsets.symmetric(horizontal: 30),
+                    height: 50,
+                    alignment: Alignment.center,
 
-                  child: TextField(
-                    controller: _pesoController,
-                    onChanged: (value) {},
-                    decoration: const InputDecoration(
-                        enabledBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(color: Colors.blue)),
-                        focusedBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(color: Colors.blue)),
-                        hintText: "Digite seu peso:"),
+                    child: TextField(
+                      controller: _pesoController,
+                      onChanged: (value) {},
+                      decoration: const InputDecoration(
+                          enabledBorder: UnderlineInputBorder(
+                              borderSide: BorderSide(color: Colors.blue)),
+                          focusedBorder: UnderlineInputBorder(
+                              borderSide: BorderSide(color: Colors.blue)),
+                          hintText: "Digite seu peso:"),
+                    ),
                   ),
                 ),
                 const SizedBox(
                   height: 20,
                 ),
+                const Column(children: [
+                  Text(
+                    "Digite sua altura:",
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  )
+                ]),
                 Container(
                   //The container responsible for user height-related settings.
                   width: double.infinity,
@@ -103,10 +143,15 @@ class _MyScreenState extends State<MyScreen> {
                   height: 100,
                 ),
                 TextButton(
-                  onPressed: () {
+                  onPressed: () async {
                     double peso = double.tryParse(_pesoController.text) ?? 0.0;
                     double altura =
                         double.tryParse(_alturaController.text) ?? 0.0;
+
+                    final SharedPreferences prefs =
+                        await SharedPreferences.getInstance();
+                    await prefs.setDouble('peso', peso);
+                    await prefs.setDouble('altura', altura);
 
                     if (peso > 0 && altura > 0) {
                       calcular.calcula(peso, altura);
@@ -156,7 +201,6 @@ class _MyScreenState extends State<MyScreen> {
                                   TextButton(
                                       onPressed: () {
                                         Navigator.of(context).pop();
-                                      
                                       },
                                       child: const Text("OK!"))
                                 ],
